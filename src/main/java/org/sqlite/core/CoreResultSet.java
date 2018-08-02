@@ -113,18 +113,17 @@ public abstract class CoreResultSet implements Codes
         cols = null;
         colsMeta = null;
         meta = null;
-        open = false;
         limitRows = 0;
         row = 0;
         lastCol = -1;
         columnNameToIndex = null;
 
-        synchronized (db) {
-            if (stmt == null) {
-                return;
-            }
+        if (!open) {
+            return;
+        }
 
-            if (stmt != null && stmt.pointer != 0) {
+        synchronized (db) {
+            if (stmt.pointer != 0) {
                 db.reset(stmt.pointer);
 
                 if (closeStmt) {
@@ -133,6 +132,8 @@ public abstract class CoreResultSet implements Codes
                 }
             }
         }
+
+        open = false;
     }
 
     protected Integer findColumnIndexInCache(String col) {

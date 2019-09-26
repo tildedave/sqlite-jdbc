@@ -1806,12 +1806,12 @@ int RegisterExtensionFunctions(sqlite3 *db){
     }
     //sqlite3CreateFunc
     /* LMH no error checking */
-    sqlite3_create_function(db, aAggs[i].zName, aAggs[i].nArg, SQLITE_UTF8, 
+    sqlite3_create_function(db, aAggs[i].zName, aAggs[i].nArg, SQLITE_UTF16, 
         pArg, 0, aAggs[i].xStep, aAggs[i].xFinalize);
 #if 0
     if( aAggs[i].needCollSeq ){
       struct FuncDefAgg *pFunc = sqlite3FindFunction( db, aAggs[i].zName,
-          strlen(aAggs[i].zName), aAggs[i].nArg, SQLITE_UTF8, 0);
+          strlen(aAggs[i].zName), aAggs[i].nArg, SQLITE_UTF16, 0);
       if( pFunc && aAggs[i].needCollSeq ){
         pFunc->needCollSeq = 1;
       }

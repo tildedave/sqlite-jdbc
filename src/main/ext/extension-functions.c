@@ -173,6 +173,11 @@ typedef struct map{
   short free;
 } map;
 
+typedef struct node_stack{
+  node *data;
+  struct node_stack *next;
+} node_stack;
+
 /*
 ** creates a map given a comparison function
 */
@@ -192,6 +197,21 @@ void map_iterate(map *m, map_iterator iter, void* p);
 ** frees all memory used by a map
 */
 void map_destroy(map *m);
+
+/*
+** create a stack entry
+*/
+node_stack* node_stack_create(node *n);
+
+/*
+** push a node onto the stack
+*/
+void node_stack_push(node_stack **stack, node *n);
+
+/*
+** pop a value from the stack
+*/
+node* node_stack_pop(node_stack **stack);
 
 /*
 ** compares 2 integers
@@ -1873,35 +1893,59 @@ void map_insert(map *m, void *e){
   node_insert(&(m->base), m->cmp, e);
 }
 
-void node_iterate(node *n, map_iterator iter, void* p){
-  if(n){
-    if(n->l)
-      node_iterate(n->l, iter, p);
-    iter(n->data, n->count, p);
-    if(n->r)
-      node_iterate(n->r, iter, p);
-  }
-}
-
 void map_iterate(map *m, map_iterator iter, void* p){
-  node_iterate(m->base, iter, p);
-}
-
-void node_destroy(node *n){
-  if(0!=n){
-    xfree(n->data);
-    if(n->l)
-      node_destroy(n->l);
-    if(n->r)
-      node_destroy(n->r);
-
-    xfree(n);
+  node* n = m->base;
+  node_stack *s = node_stack_create(n);
+  node_stack **stack = &s;
+  while(*stack || n){
+    if(n){
+      node_stack_push(stack, n);
+      n = n->l;
+      continue;
+    }
+    n = node_stack_pop(stack);
+    iter(n->data, n->count, p);
+    n = n->r;
   }
 }
 
 void map_destroy(map *m){
-  node_destroy(m->base);
+  node *n = m->base;
+  node_stack *s = node_stack_create(n);
+  node_stack **stack = &s;
+  while(*stack){
+    n = node_stack_pop(stack);
+    if(n->l)
+      node_stack_push(stack, n->l);
+    if(n->r)
+      node_stack_push(stack, n->r);
+    xfree(n->data);
+    xfree(n);
+  }
 }
+
+node_stack* node_stack_create(node *n){
+  node_stack *s = (node_stack*)calloc(1,sizeof(node_stack));
+  s->data = n;
+  return s;
+}
+
+void node_stack_push(node_stack **stack, node *n) {
+  node_stack *s = node_stack_create(n);
+  node_stack *orig = *stack;
+  s->next = orig;
+  *stack = s;
+}
+
+node* node_stack_pop(node_stack **stack) {
+  node_stack *orig = *stack;
+  node *ret = orig->data;
+  *stack = orig->next;
+  free(orig);
+
+  return ret;
+}
+
 
 int int_cmp(const void *a, const void *b){
   sqlite_int64 aa = *(sqlite_int64 *)(a);

@@ -12,6 +12,7 @@ import java.util.Properties;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.matchers.JUnitMatchers;
@@ -90,6 +91,7 @@ public class ErrorMessageTest {
     }
 
     @Test
+    @Ignore
     public void writeProtected() throws SQLException, IOException {
         File file = File.createTempFile("error-message-test-write-protected", ".sqlite");
         file.deleteOnExit();

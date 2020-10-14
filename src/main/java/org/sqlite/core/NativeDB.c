@@ -1486,7 +1486,7 @@ JNIEXPORT jint JNICALL Java_org_sqlite_core_NativeDB_backup(
 
   /* Close the database connection opened on database file zFilename
   ** and return the result of this function. */
-  (void)sqlite3_close(pFile);
+  (void)sqlite3_close_v2(pFile);
 
   freeUtf8Bytes(dDBName);
   freeUtf8Bytes(dFileName);

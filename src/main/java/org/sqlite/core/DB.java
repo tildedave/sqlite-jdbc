@@ -421,6 +421,26 @@ public abstract class DB implements Codes
     public abstract String column_text(long stmt, int col) throws SQLException;
 
     /**
+     * Begin reading a column as text.  Used by {@link org.sqlite.jdbc4.ResultSetCharacterStreamReader}
+     * This will do a conversion of the column to text under the hood, see https://sqlite.org/c3ref/column_blob.html
+     * for conversion rules.
+     * @param stmt Pointer to the statement.
+     * @param col Number of the column.
+     * @throws SQLException
+     * @return Two-valued long array - first element is a pointer to the text, second is the length of the text.
+     */
+    public abstract long[] column_text_stream_init(long stmt, int col) throws SQLException;
+
+    /**
+     * @param pointer Pointer to the text
+     * @param buff Byte buffer to write to
+     * @param offset Offset in buffer to start writing at
+     * @param len Number of bytes to write
+     * @throws SQLException
+     */
+    public abstract void column_text_stream_read(long pointer, byte[] buff, int offset, int len) throws SQLException;
+
+    /**
      * @param stmt Pointer to the statement.
      * @param col Number of column.
      * @return BLOB value of the column in the result set of a SELECT statement

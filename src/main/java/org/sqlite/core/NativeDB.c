@@ -931,8 +931,8 @@ JNIEXPORT jlongArray JNICALL Java_org_sqlite_core_NativeDB_column_1text_1stream_
         return NULL;
     }
 
-    bytes = sqlite3_column_text(toref(stmt), col);
-    nbytes = sqlite3_column_bytes(toref(stmt), col);
+    bytes = sqlite3_column_text16(toref(stmt), col);
+    nbytes = sqlite3_column_bytes16(toref(stmt), col);
     result = (*env)->NewLongArray(env, (jsize) 2);
 
     if (!result)
@@ -951,7 +951,7 @@ JNIEXPORT jlongArray JNICALL Java_org_sqlite_core_NativeDB_column_1text_1stream_
 
 
 JNIEXPORT void JNICALL Java_org_sqlite_core_NativeDB_column_1text_1stream_1read(
-        JNIEnv *env, jobject this, jlong pointer, jbyteArray buf, jint offset, jint len)
+        JNIEnv *env, jobject this, jlong pointer, jcharArray buf, jint offset, jint len)
 {
     sqlite3 *db;
 
@@ -962,7 +962,7 @@ JNIEXPORT void JNICALL Java_org_sqlite_core_NativeDB_column_1text_1stream_1read(
         return;
     }
 
-    (*env)->SetByteArrayRegion(env, buf, offset, len, (const char*) pointer);
+    (*env)->SetCharArrayRegion(env, buf, offset, len, (void*) pointer);
 }
 
 

@@ -259,7 +259,7 @@ public final class NativeDB extends DB
     /**
      * @see DB#column_text_stream_read(long, char[], int, int)
      */
-    public native synchronized void column_text_stream_read(long pointer, byte[] cbuff, int offset, int len);
+    public native synchronized void column_text_stream_read(long pointer, char[] cbuff, int offset, int len);
 
     /**
      * @see org.sqlite.core.DB#column_blob(long, int)

@@ -248,6 +248,19 @@ public class ResultSetTest {
             readCharacterStream(resultSet.getCharacterStream(1), 1024));
     }
 
+    @Test
+    public void testEmptyString() throws SQLException, IOException
+    {
+        stat.executeUpdate("insert into test values (6, '', 'foobaz')");
+        ResultSet resultSet = stat.executeQuery(
+            "select test.description from test where id = 6");
+
+        assertTrue(resultSet.next());
+        Reader reader = resultSet.getCharacterStream(1);
+        assertNotNull(reader);
+        assertEquals(-1, reader.read(new char[1024]));
+    }
+
     private String readCharacterStream(Reader reader, int buffSize) throws IOException
     {
         StringBuilder buffer = new StringBuilder();

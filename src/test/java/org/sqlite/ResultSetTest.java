@@ -169,7 +169,6 @@ public class ResultSetTest {
         assertEquals("Buffer larger than string",
             "description",
             readCharacterStream(resultSet.getCharacterStream(1), 1024));
-
     }
 
     @Test
@@ -215,8 +214,8 @@ public class ResultSetTest {
             "Offset argument",
             "aaaaaCall me Ishmael",
             new String(buff));
-
     }
+
     @Test
     public void testNullCharacterStream() throws SQLException
     {

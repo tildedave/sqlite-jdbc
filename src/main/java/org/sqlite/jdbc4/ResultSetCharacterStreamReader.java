@@ -57,7 +57,6 @@ public class ResultSetCharacterStreamReader extends Reader
     {
         long[] bytes = datbase.column_text_stream_init(stmt.pointer, this.col);
         this.pointer = bytes[0];
-        // this is the length in bytes (8 bits), we need to use the length in chars
         this.length = (int) bytes[1];
         this.position = 0;
     }

@@ -911,19 +911,10 @@ JNIEXPORT jbyteArray JNICALL Java_org_sqlite_core_NativeDB_column_1text_1utf8(
 JNIEXPORT jlongArray JNICALL Java_org_sqlite_core_NativeDB_column_1text_1stream_1init(
         JNIEnv *env, jobject this, jlong stmt, jint col)
 {
-    sqlite3 *db;
     const char *bytes;
     int nbytes;
     jlongArray result;
     long *arr;
-
-
-    db = gethandle(env, this);
-    if (!db)
-    {
-        throwex_db_closed(env);
-        return NULL;
-    }
 
     if (!stmt)
     {
@@ -953,15 +944,6 @@ JNIEXPORT jlongArray JNICALL Java_org_sqlite_core_NativeDB_column_1text_1stream_
 JNIEXPORT void JNICALL Java_org_sqlite_core_NativeDB_column_1text_1stream_1read(
         JNIEnv *env, jobject this, jlong pointer, jcharArray buf, jint offset, jint len)
 {
-    sqlite3 *db;
-
-    db = gethandle(env, this);
-    if (!db)
-    {
-        throwex_db_closed(env);
-        return;
-    }
-
     (*env)->SetCharArrayRegion(env, buf, offset, len, (void*) pointer);
 }
 

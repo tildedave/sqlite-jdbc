@@ -1,8 +1,7 @@
 package org.sqlite;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import java.io.IOException;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -11,6 +10,8 @@ import java.sql.Statement;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class ResultSetTest {
 
@@ -153,5 +154,54 @@ public class ResultSetTest {
         resultSet.close();
 
         assertTrue(resultSet.isClosed());
+    }
+
+    @Test
+    public void testCharacterStream() throws SQLException, IOException
+    {
+        String longString = "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation. Whenever I find myself growing grim about the mouth; whenever it is a damp, drizzly November in my soul; whenever I find myself involuntarily pausing before coffin warehouses, and bringing up the rear of every funeral I meet; and especially whenever my hypos get such an upper hand of me, that it requires a strong moral principle to prevent me from deliberately stepping into the street, and methodically knocking peoples hats off- then, I account it high time to get to sea as soon as I can. This is my substitute for pistol and ball. With a philosophical flourish Cato throws himself upon his sword; I quietly take to the ship. There is nothing surprising in this. If they but knew it, almost all men in their degree, some time or other, cherish very nearly the same feelings towards the ocean with me.";
+        stat.executeUpdate(String.format("insert into test values (2, '%s', 'baz')", longString));
+        stat.executeUpdate(String.format("insert into test values (3, NULL, 'qux')", longString));
+        stat.executeUpdate(String.format("insert into test values (4, 1.23456, 'frob')", longString));
+
+        ResultSet resultSet = stat.executeQuery("select test.description from test");
+
+        assertTrue(resultSet.next());
+
+        // Smaller buffer
+        assertEquals("description",
+            readCharacterStream(resultSet.getCharacterStream(1), 2));
+        // Larger buffer
+        assertEquals("description",
+            readCharacterStream(resultSet.getCharacterStream(1), 1024));
+
+        assertTrue(resultSet.next());
+        assertEquals(longString,
+            readCharacterStream(resultSet.getCharacterStream(1), 1024));
+
+        Reader reader = resultSet.getCharacterStream(1);
+        char[] buff = new char[20];
+        for (int i = 0; i < 5; i++) {
+            buff[i] = 'a';
+        }
+        reader.read(buff, 5, 15);
+        assertEquals("aaaaaCall me Ishmael", new String(buff));
+
+        assertTrue(resultSet.next());
+        assertNull(resultSet.getCharacterStream(1));
+
+        assertTrue(resultSet.next());
+        assertEquals("1.23456", readCharacterStream(resultSet.getCharacterStream(1), 10));
+    }
+
+    private String readCharacterStream(Reader reader, int buffSize) throws SQLException, IOException
+    {
+        StringBuffer buffer = new StringBuffer();
+        char[] arr = new char[buffSize];
+        int read;
+        while ((read = reader.read(arr)) != -1) {
+            buffer.append(arr, 0, read);
+        }
+        return buffer.toString();
     }
 }

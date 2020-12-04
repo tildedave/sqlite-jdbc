@@ -159,25 +159,51 @@ public class ResultSetTest {
     @Test
     public void testCharacterStream() throws SQLException, IOException
     {
-        String longString = "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation. Whenever I find myself growing grim about the mouth; whenever it is a damp, drizzly November in my soul; whenever I find myself involuntarily pausing before coffin warehouses, and bringing up the rear of every funeral I meet; and especially whenever my hypos get such an upper hand of me, that it requires a strong moral principle to prevent me from deliberately stepping into the street, and methodically knocking peoples hats off- then, I account it high time to get to sea as soon as I can. This is my substitute for pistol and ball. With a philosophical flourish Cato throws himself upon his sword; I quietly take to the ship. There is nothing surprising in this. If they but knew it, almost all men in their degree, some time or other, cherish very nearly the same feelings towards the ocean with me.";
-        stat.executeUpdate(String.format("insert into test values (2, '%s', 'baz')", longString));
-        stat.executeUpdate(String.format("insert into test values (3, NULL, 'qux')", longString));
-        stat.executeUpdate(String.format("insert into test values (4, 1.23456, 'frob')", longString));
-
         ResultSet resultSet = stat.executeQuery("select test.description from test");
 
         assertTrue(resultSet.next());
 
-        // Smaller buffer
-        assertEquals("description",
+        assertEquals("Buffer smaller than string",
+            "description",
             readCharacterStream(resultSet.getCharacterStream(1), 2));
-        // Larger buffer
-        assertEquals("description",
+        assertEquals("Buffer larger than string",
+            "description",
             readCharacterStream(resultSet.getCharacterStream(1), 1024));
 
+    }
+
+    @Test
+    public void testFloatCharacterStream() throws SQLException, IOException
+    {
+        stat.executeUpdate("insert into test values (4, 1.23456, 'frob')");
+        ResultSet resultSet = stat.executeQuery(
+            "select test.description from test where id = 4");
+
         assertTrue(resultSet.next());
-        assertEquals(longString,
-            readCharacterStream(resultSet.getCharacterStream(1), 1024));
+        assertEquals(
+            "Buffer larger than string representation",
+            "1.23456",
+            readCharacterStream(resultSet.getCharacterStream(1), 10));
+        assertEquals(
+            "Buffer smaller than string representation",
+            "1.23456",
+            readCharacterStream(resultSet.getCharacterStream(1), 2));
+    }
+
+    @Test
+    public void testLongString() throws SQLException, IOException
+    {
+        String longString = "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation. Whenever I find myself growing grim about the mouth; whenever it is a damp, drizzly November in my soul; whenever I find myself involuntarily pausing before coffin warehouses, and bringing up the rear of every funeral I meet; and especially whenever my hypos get such an upper hand of me, that it requires a strong moral principle to prevent me from deliberately stepping into the street, and methodically knocking peoples hats off- then, I account it high time to get to sea as soon as I can. This is my substitute for pistol and ball. With a philosophical flourish Cato throws himself upon his sword; I quietly take to the ship. There is nothing surprising in this. If they but knew it, almost all men in their degree, some time or other, cherish very nearly the same feelings towards the ocean with me.";
+        stat.executeUpdate(
+            String.format("insert into test values (2, '%s', 'baz')", longString));
+
+        ResultSet resultSet = stat.executeQuery(
+            "select test.description from test where id = 2");
+        assertTrue(resultSet.next());
+        assertEquals("Buffer size smaller than string length",
+            longString,
+            readCharacterStream(resultSet.getCharacterStream(1),
+            1024));
 
         Reader reader = resultSet.getCharacterStream(1);
         char[] buff = new char[20];
@@ -185,18 +211,46 @@ public class ResultSetTest {
             buff[i] = 'a';
         }
         reader.read(buff, 5, 15);
-        assertEquals("aaaaaCall me Ishmael", new String(buff));
+        assertEquals(
+            "Offset argument",
+            "aaaaaCall me Ishmael",
+            new String(buff));
+
+    }
+    @Test
+    public void testNullCharacterStream() throws SQLException
+    {
+        stat.executeUpdate("insert into test values (3, NULL, 'qux')");
+        ResultSet resultSet = stat.executeQuery(
+            "select test.description from test where id = 3");
 
         assertTrue(resultSet.next());
         assertNull(resultSet.getCharacterStream(1));
-
-        assertTrue(resultSet.next());
-        assertEquals("1.23456", readCharacterStream(resultSet.getCharacterStream(1), 10));
     }
 
-    private String readCharacterStream(Reader reader, int buffSize) throws SQLException, IOException
+    @Test
+    public void testNonAsciiCharacterStream() throws SQLException, IOException
     {
-        StringBuffer buffer = new StringBuffer();
+        String utf8String = "福ずけめ愛海ハナ導復をちて勝惑メオフル張強シトサ無週なせラも管育以ヌ図速かッじつ応一ラミナ街視けうめげ号徴ぎ車始名リレけま青4志ゃ以帯イヤコモ者申章イタ示更ざ准器敗香否にひゅ。主テリ多禁産芸98出づもラら家真チラミ隼誌中ヨレヒル声頭コケヱ庁思ル提98管果らいだ高売とい告広んふず最方ヲ帯求安題ラみやえ。";
+        stat.executeUpdate(
+            String.format("insert into test values (5, '%s', 'foobar')", utf8String));
+
+        ResultSet resultSet = stat.executeQuery(
+            "select test.description from test where id = 5");
+        assertTrue(resultSet.next());
+
+        assertEquals("Buffer size smaller than string", utf8String,
+            readCharacterStream(resultSet.getCharacterStream(1), 10));
+        assertEquals("Buffer size same size as string", utf8String,
+            readCharacterStream(resultSet.getCharacterStream(1),
+                utf8String.toCharArray().length));
+        assertEquals("Buffer size larger than string", utf8String,
+            readCharacterStream(resultSet.getCharacterStream(1), 1024));
+    }
+
+    private String readCharacterStream(Reader reader, int buffSize) throws IOException
+    {
+        StringBuilder buffer = new StringBuilder();
         char[] arr = new char[buffSize];
         int read;
         while ((read = reader.read(arr)) != -1) {

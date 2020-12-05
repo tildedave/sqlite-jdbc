@@ -43,7 +43,7 @@ public class ResultSetCharacterStreamReader extends Reader
                 return -1;
             }
 
-            // length and position are in bytes (8 bit).  Java characters are 16 bytes.
+            // length and position are in bytes (8 bit).  Java characters are 16 bits (2 bytes).
             int readChars = Math.min(len, (length - position) / 2);
             db.column_text_stream_read(pointer + position, cbuf, off, readChars);
             position += (readChars * 2);

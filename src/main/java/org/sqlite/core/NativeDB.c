@@ -911,10 +911,18 @@ JNIEXPORT jbyteArray JNICALL Java_org_sqlite_core_NativeDB_column_1text_1utf8(
 JNIEXPORT jlongArray JNICALL Java_org_sqlite_core_NativeDB_column_1text_1stream_1init(
         JNIEnv *env, jobject this, jlong stmt, jint col)
 {
+    sqlite3 *db;
     const char *bytes;
     int nbytes;
     jlongArray result;
     long *arr;
+
+    db = gethandle(env, this);
+    if (!db)
+    {
+        throwex_db_closed(env);
+        return NULL;
+    }
 
     if (!stmt)
     {
@@ -924,6 +932,13 @@ JNIEXPORT jlongArray JNICALL Java_org_sqlite_core_NativeDB_column_1text_1stream_
 
     bytes = sqlite3_column_text16(toref(stmt), col);
     nbytes = sqlite3_column_bytes16(toref(stmt), col);
+
+    if (!bytes && sqlite3_errcode(db) == SQLITE_NOMEM)
+    {
+        throwex_outofmemory(env);
+        return NULL;
+    }
+
     result = (*env)->NewLongArray(env, (jsize) 2);
 
     if (!result)

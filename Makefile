@@ -7,7 +7,7 @@ RESOURCE_DIR = src/main/resources
 
 all: jni-header package
 
-deploy: 
+deploy:
 	mvn package deploy -DperformRelease=true
 
 MVN:=mvn

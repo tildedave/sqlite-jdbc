@@ -1,10 +1,10 @@
 /*
  * Copyright (c) 2007 David Crawshaw <david@zentus.com>
- * 
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -18,6 +18,8 @@ package org.sqlite.core;
 
 import org.sqlite.BusyHandler;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 
 import org.sqlite.Function;
@@ -119,7 +121,7 @@ public final class NativeDB extends DB
      */
     @Override
     public native synchronized void busy_timeout(int ms);
-    
+
     /**
      * @see org.sqlite.core.DB#busy_handler(BusyHandler)
      */
@@ -141,20 +143,20 @@ public final class NativeDB extends DB
      */
     @Override
     synchronized String errmsg() {
-        return utf8ByteArrayToString(errmsg_utf8());
+        return utf8ByteBufferToString(errmsg_utf8());
     }
 
-    native synchronized byte[] errmsg_utf8();
+    native synchronized ByteBuffer errmsg_utf8();
 
     /**
      * @see org.sqlite.core.DB#libversion()
      */
     @Override
     public synchronized String libversion() {
-        return utf8ByteArrayToString(libversion_utf8());
+        return utf8ByteBufferToString(libversion_utf8());
     }
 
-    native byte[] libversion_utf8();
+    native ByteBuffer libversion_utf8();
 
     /**
      * @see org.sqlite.core.DB#changes()
@@ -215,20 +217,20 @@ public final class NativeDB extends DB
      */
     @Override
     public synchronized String column_decltype(long stmt, int col) {
-        return utf8ByteArrayToString(column_decltype_utf8(stmt, col));
+        return utf8ByteBufferToString(column_decltype_utf8(stmt, col));
     }
 
-    native synchronized byte[] column_decltype_utf8(long stmt, int col);
+    native synchronized ByteBuffer column_decltype_utf8(long stmt, int col);
 
     /**
      * @see org.sqlite.core.DB#column_table_name(long, int)
      */
     @Override
     public synchronized String column_table_name(long stmt, int col) {
-        return utf8ByteArrayToString(column_table_name_utf8(stmt, col));
+        return utf8ByteBufferToString(column_table_name_utf8(stmt, col));
     }
 
-    native synchronized byte[] column_table_name_utf8(long stmt, int col);
+    native synchronized ByteBuffer column_table_name_utf8(long stmt, int col);
 
     /**
      * @see org.sqlite.core.DB#column_name(long, int)
@@ -236,20 +238,20 @@ public final class NativeDB extends DB
     @Override
     public synchronized String column_name(long stmt, int col)
     {
-        return utf8ByteArrayToString(column_name_utf8(stmt, col));
+        return utf8ByteBufferToString(column_name_utf8(stmt, col));
     }
 
-    native synchronized byte[] column_name_utf8(long stmt, int col);
+    native synchronized ByteBuffer column_name_utf8(long stmt, int col);
 
     /**
      * @see org.sqlite.core.DB#column_text(long, int)
      */
     @Override
     public synchronized String column_text(long stmt, int col) {
-        return utf8ByteArrayToString(column_text_utf8(stmt, col));
+        return utf8ByteBufferToString(column_text_utf8(stmt, col));
     }
 
-    native synchronized byte[] column_text_utf8(long stmt, int col);
+    native synchronized ByteBuffer column_text_utf8(long stmt, int col);
 
     /**
      * @see org.sqlite.core.DB#column_blob(long, int)
@@ -370,10 +372,10 @@ public final class NativeDB extends DB
      */
     @Override
     public synchronized String value_text(Function f, int arg) {
-        return utf8ByteArrayToString(value_text_utf8(f, arg));
+        return utf8ByteBufferToString(value_text_utf8(f, arg));
     }
 
-    native synchronized byte[] value_text_utf8(Function f, int argUtf8);
+    native synchronized ByteBuffer value_text_utf8(Function f, int argUtf8);
 
     /**
      * @see org.sqlite.core.DB#value_blob(org.sqlite.Function, int)
@@ -496,16 +498,11 @@ public final class NativeDB extends DB
         }
     }
 
-    static String utf8ByteArrayToString(byte[] utf8bytes) {
-        if (utf8bytes == null) {
+    static String utf8ByteBufferToString(ByteBuffer buffer) {
+        if (buffer == null) {
             return null;
         }
-        try {
-            return new String(utf8bytes, "UTF-8");
-        }
-        catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("UTF-8 is not supported", e);
-        }
+        return StandardCharsets.UTF_8.decode(buffer).toString();
     }
 
     public native synchronized void register_progress_handler(int vmCalls, ProgressHandler progressHandler) throws SQLException;

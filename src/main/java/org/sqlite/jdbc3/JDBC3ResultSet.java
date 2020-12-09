@@ -19,13 +19,10 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.sqlite.core.Codes;
 import org.sqlite.core.CoreResultSet;
 import org.sqlite.core.CoreStatement;
 import org.sqlite.core.DB;
 import org.sqlite.date.FastDateFormat;
-import org.sqlite.jdbc4.ResultSetCharacterStreamReader;
 
 public abstract class JDBC3ResultSet extends CoreResultSet {
     // ResultSet Functions //////////////////////////////////////////
@@ -266,10 +263,8 @@ public abstract class JDBC3ResultSet extends CoreResultSet {
      * @see java.sql.ResultSet#getCharacterStream(int)
      */
     public Reader getCharacterStream(int col) throws SQLException {
-        if (getDatabase().column_type(stmt.pointer, checkCol(col)) == Codes.SQLITE_NULL) {
-            return null;
-        }
-        return new ResultSetCharacterStreamReader(stmt, markCol(col));
+        String string = getString(col);
+        return string == null ? null : new StringReader(string);
     }
 
     /**

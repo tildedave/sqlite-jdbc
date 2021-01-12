@@ -19,7 +19,9 @@ package org.sqlite.core;
 import org.sqlite.BusyHandler;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.sql.SQLException;
 
 import org.sqlite.Function;
@@ -502,7 +504,14 @@ public final class NativeDB extends DB
         if (buffer == null) {
             return null;
         }
-        return StandardCharsets.UTF_8.decode(buffer).toString();
+        byte[] buff = new byte[buffer.remaining()];
+        buffer.get(buff);
+        try {
+            return new String(buff, Charset.forName("UTF-8"));
+        }
+        catch (UnsupportedCharsetException e) {
+            throw new RuntimeException("UTF-8 is not supported", e);
+        }
     }
 
     public native synchronized void register_progress_handler(int vmCalls, ProgressHandler progressHandler) throws SQLException;
